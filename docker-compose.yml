@@ -1,0 +1,33 @@
+version: '3'
+services:
+  hugo:
+    container_name: hugo
+    image: klakegg/hugo:alpine
+    restart: on-failure
+    env_file:
+      - hugo.env
+    volumes:
+      - "./site:/src"
+      - "./html:/target"
+    labels:
+      - "com.ouroboros.enable=true"
+      - "traefik.enable=false"
+  www:
+    container_name: www
+    image: nginx:latest
+    restart: always
+    ports: 
+      - "8000:80"
+    labels: 
+      - "traefik.frontend.rule=Host:www.example.com"
+      - "traefik.frontend.headers.STSSeconds=31536000"
+      - "traefik.docker.network=traefik"
+    networks:
+      - traefik
+    volumes:
+      - "./default.conf:/etc/nginx/conf.d/default.conf"
+      - "./html:/var/www/html:ro"
+networks:
+  traefik:
+    external:
+      name: traefik
